@@ -8,12 +8,17 @@ The driver code is written based on the xilinx wiki as below and it relays on th
 
 # ARM dtb should contain a node pointing to 2 MM2S channels
 
-dma_proxy {  
+dma_proxy_h2c {  
      compatible ="xlnx,dma_proxy";  
-     dmas = <&axi_mcdma_PS_RD 0 &axi_mcdma_PL_RD 0>;  
-     dma-names = "h2c", "c2h";  
+     dmas = <&axi_mcdma_PS_RD 0>;  
+     dma-names = "h2c";  
 }  
 
+dma_proxy_c2h {  
+     compatible ="xlnx,dma_proxy";  
+     dmas = <&axi_mcdma_PL_RD 0>;  
+     dma-names = "c2h";  
+} 
 # Notice
   becaue of the datamover btt field 23 bits limitation, although a AXI MCDMA buffer descripter support 26 bits(64MB) as well as a packet can have many bds, but all of the bds in a packet only have a SOF, so it can only contruct a command for datamover, therefore one time call device_prep_slave_sg can transfer not more than 8MB. 
 # MCDMA_1proxy_1chan_driver
