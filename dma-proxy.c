@@ -295,7 +295,7 @@ static struct file_operations dm_fops = {
 static int cdevice_init(struct dma_proxy_channel *pchannel_p, char *name)
 {
 	int rc;
-	char class_name[32] = "dma_proxy_";
+	//char class_name[32] = "dma_proxy_";
 	static struct class *local_class_p = NULL;
 
 	/* Allocate a character device from the kernel for this driver.
@@ -395,6 +395,7 @@ static int create_channel(struct platform_device *pdev, struct dma_proxy_channel
 		dev_err(pchannel_p->dma_device_p, "DMA channel request error\n");
 		return ERROR;
 	}
+	pchannel_p->dma_device_p = &pdev->dev;
 	/* Initialize the character device for the dma proxy channel
 	 */
 	rc = cdevice_init(pchannel_p, name);
@@ -433,7 +434,7 @@ static int dma_proxy_probe(struct platform_device *pdev)
 	chandev = devm_kzalloc(&pdev->dev, sizeof(*chandev), GFP_KERNEL);
 	if (!chandev)
                 return -ENOMEM;
-	chandev->dma_device_p = &pdev->dev; 
+	//chandev->dma_device_p = &pdev->dev; 
 	platform_set_drvdata(pdev, chandev);
 	
 	of_property_read_string_index(pdev->dev.of_node, "dma-names", 0, &nodeName);
