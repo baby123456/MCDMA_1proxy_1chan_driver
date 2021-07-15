@@ -151,11 +151,10 @@ static void wait_for_transfer(struct dma_proxy_channel *pchannel_p)
 
 /* Perform the DMA transfer for the channel, starting it then blocking to wait for completion.
  */
-static void transfer(struct dma_proxy_channel *pchannel_p)
+static void transfer(struct dma_proxy_channel *pchannel_p, u64 pl_addr)
 {
     // 4 bytes align
     int max_transfer_size = 0x7FFF00; 
-    u64 pl_addr = 0x80000000;
     int cnt = 0;
     const char dir[3][5] = {"h2h","h2c","c2h"};
 
@@ -191,7 +190,7 @@ static void transfer(struct dma_proxy_channel *pchannel_p)
 static void tx_test( struct dma_proxy_channel *pchannel_p ,int test_size)
 {
 	pchannel_p->interface_p->length = test_size;
-	transfer(pchannel_p);
+	transfer(pchannel_p, 0x80000000);
 }
 static void test(  struct dma_proxy_channel *pchannel_p, u32 dir)
 {
@@ -214,7 +213,7 @@ static void test(  struct dma_proxy_channel *pchannel_p, u32 dir)
 		
 		/* Receive the data that was just sent and looped back */
 		pchannel_p->interface_p->length = test_size;
-		transfer(pchannel_p);
+		transfer(pchannel_p, 0x80000000);
 
 		/* Verify the receiver buffer matches the transmit buffer to
 		 * verify the transfer was good
@@ -273,10 +272,14 @@ static int release(struct inode *ino, struct file *file)
 static long ioctl(struct file *file, unsigned int unused , unsigned long arg)
 {
 	struct dma_proxy_channel *pchannel_p = (struct dma_proxy_channel *)file->private_data;
+		
+	u64 pl_addr = 0x0;
+	copy_from_user(&pl_addr, (unsigned long*)arg, sizeof(unsigned long)); 
+	printk("pl_addr: %#llx\n",pl_addr);	
 
 	/* Perform the DMA transfer on the specified channel blocking til it completes
 	 */
-	transfer(pchannel_p);
+	transfer(pchannel_p, pl_addr);
 
 	return 0;
 }

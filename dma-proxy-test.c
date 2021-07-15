@@ -119,10 +119,13 @@ int main(int argc, char *argv[])
 {
 	struct dma_proxy_channel_interface *rx_proxy_interface_p;
 	int rx_proxy_fd, i;
-	int dummy;
+	unsigned long  dummy = 0x80000000;
 	int counter;
     struct timeval start, end;
-    int time_diff, mb_sec;
+    struct timeval start1, end1;
+
+    int time_diff;
+    double mb_sec;
     int num_transfer,verify=0;
     int memcpy_dma = 1;    //default dma
 
@@ -193,8 +196,7 @@ int main(int argc, char *argv[])
     init_map();
     gettimeofday( &start, NULL );
 	for (counter = 0; counter < num_transfer; counter++) {
-        tx_proxy_interface_p->length = test_size;
-
+        
         if(verify){
             for (i = 0; i < test_size; i++)
                 tx_proxy_interface_p->buffer[i] = counter + i;
@@ -205,28 +207,65 @@ int main(int argc, char *argv[])
 	        for (i = 0; i < test_size; i++)
 		        rx_proxy_interface_p->buffer[i] = 0;
         }
-        rx_proxy_interface_p->length = test_size;
-        
+                
         if(memcpy_dma){
             /* Perform the DMA transfer and the check the status after it completes
 	 	    * as the call blocks til the transfer is done.
  		    */
+		    tx_proxy_interface_p->length = test_size;
 		    ioctl(tx_proxy_fd, 0, &dummy);
 		    if (tx_proxy_interface_p->status != PROXY_NO_ERROR)
 			    printf("Proxy tx transfer error,%d\n",tx_proxy_interface_p->status);
 
 		    /* Perform a receive DMA transfer and after it finishes check the status
 		    */
+		    rx_proxy_interface_p->length = test_size;
 		    ioctl(rx_proxy_fd, 0, &dummy);
 		    if (rx_proxy_interface_p->status != PROXY_NO_ERROR)
 			    printf("Proxy rx transfer error,%d\n",rx_proxy_interface_p->status);
         }
         else{
+	    /*
             for (i = 0; i < test_size; i++)
                 mem_map_base_mem[i] = tx_proxy_interface_p->buffer[i];
             for (i = 0; i < test_size; i++)
                 rx_proxy_interface_p->buffer[i] = mem_map_base_mem[i];
-        }
+		*/
+		memcpy( (void *)mem_map_base_mem, (void *)tx_proxy_interface_p->buffer, test_size);
+		memcpy( (void *)rx_proxy_interface_p->buffer, (void *)mem_map_base_mem, test_size);
+
+		/*
+		unsigned char *buffer = (unsigned char *)malloc(0x400000);
+		FILE *fp = NULL;
+		if( (fp = fopen("weight_reorg_ap16.bin", "rb")) == NULL)
+			fprintf(stderr,"CANNOT OPEN bin_file\n");
+		int rd_num = fread(buffer, sizeof(unsigned char), 0x400000, fp);
+		fclose(fp);
+
+	   	fd = open("/dev/mem", O_RDWR|O_SYNC);
+    	   	if (fd == -1){
+        		perror("init_map open failed:");
+                	exit(1);
+           	}
+
+           	//physical mapping to virtual memory
+           	mem_map_base_mem = (uint8_t * )mmap(NULL, 4*1024*1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, MEM_BASE_ADDR);
+                                    
+    	   	if (mem_map_base_mem == NULL) {
+        		perror("init_map mmap failed:");
+        		close(fd);
+        		exit(1);
+    	    	}
+		gettimeofday( &start1, NULL );
+		memcpy( (void *)mem_map_base_mem, (void *)buffer, 4*1024*1024);
+		gettimeofday( &end1, NULL );
+    		time_diff = 1000000 * ( end1.tv_sec - start1.tv_sec ) + end1.tv_usec - start1.tv_usec;
+    		printf("memcpy time: %d us\n", time_diff);
+   		
+		munmap(mem_map_base_mem, 4*1024*1024);
+    		close(fd);
+ 		*/
+	}
 
         /* Verify the data recieved matchs what was sent (tx is looped back to tx)
 		*/
@@ -240,12 +279,13 @@ int main(int argc, char *argv[])
     }
     gettimeofday( &end, NULL );
     finish_map();
+    
     time_diff = 1000000 * ( end.tv_sec - start.tv_sec ) + end.tv_usec - start.tv_usec;
-    mb_sec = ((1000000 / (double)time_diff) * (num_transfer*(double)test_size)) / 1000000;
+    mb_sec = ((1000000 / (double)time_diff) * (2*num_transfer*(double)test_size)) / 1000000;
     printf("Time: %d us\n", time_diff);
     printf("Time: %d ms\n", time_diff/1000);
     printf("Transfer size: %d KB\n", (long long)(num_transfer)*(test_size / 1024));
-    printf("Throughput: %d MB / sec \n", mb_sec);
+    printf("Throughput: %lf MB / sec \n", mb_sec);
 
 	/* Unmap the proxy channel interface memory and close the device files before leaving
 	 */
