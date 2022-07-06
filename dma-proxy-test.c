@@ -121,10 +121,12 @@ int main(int argc, char *argv[])
 	int rx_proxy_fd, i;
 	int dummy;
 	int counter;
-    struct timeval start, end;
-    int time_diff, mb_sec;
-    int num_transfer,verify=0;
-    int memcpy_dma = 1;    //default dma
+    	
+	struct timeval start, end;
+    	int time_diff;
+ 	double mb_sec;
+    	int num_transfer,verify=0;
+        int memcpy_dma = 1;    //default dma
 
 	printf("DMA proxy test\n");
 
@@ -241,11 +243,11 @@ int main(int argc, char *argv[])
     gettimeofday( &end, NULL );
     finish_map();
     time_diff = 1000000 * ( end.tv_sec - start.tv_sec ) + end.tv_usec - start.tv_usec;
-    mb_sec = ((1000000 / (double)time_diff) * (num_transfer*(double)test_size)) / 1000000;
+    mb_sec = ((1000000 / (double)time_diff) * (2*num_transfer*(double)test_size)) /(1024*1024);
     printf("Time: %d us\n", time_diff);
     printf("Time: %d ms\n", time_diff/1000);
     printf("Transfer size: %d KB\n", (long long)(num_transfer)*(test_size / 1024));
-    printf("Throughput: %d MB / sec \n", mb_sec);
+    printf("Throughput: %lf MB / sec \n", mb_sec);
 
 	/* Unmap the proxy channel interface memory and close the device files before leaving
 	 */
