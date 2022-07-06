@@ -188,10 +188,7 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < test_size; i++)
 		tx_proxy_interface_p->buffer[i] = i;
-
-	/* Create the thread for the transmit processing passing the number of transactions to it
-	 */
-	//pthread_create(&tid, NULL, tx_thread, atoi(argv[1]));
+    
     init_map();
     gettimeofday( &start, NULL );
 	for (counter = 0; counter < num_transfer; counter++) {
@@ -237,7 +234,6 @@ int main(int argc, char *argv[])
 			    if (rx_proxy_interface_p->buffer[i] != (unsigned char)(counter + i))
 				    printf("buffer not equal, index = %d, data = %d expected data = %d\n", i, 
 					rx_proxy_interface_p->buffer[i], (unsigned char)(counter + i));
-	            //printf("%dst test ok!\n",counter);
         }
     }
     gettimeofday( &end, NULL );
