@@ -122,7 +122,6 @@ int main(int argc, char *argv[])
 	unsigned long  dummy = 0x80000000;
 	int counter;
     struct timeval start, end;
-    struct timeval start1, end1;
 
     int time_diff;
     double mb_sec;
@@ -225,46 +224,9 @@ int main(int argc, char *argv[])
 			    printf("Proxy rx transfer error,%d\n",rx_proxy_interface_p->status);
         }
         else{
-	    /*
-            for (i = 0; i < test_size; i++)
-                mem_map_base_mem[i] = tx_proxy_interface_p->buffer[i];
-            for (i = 0; i < test_size; i++)
-                rx_proxy_interface_p->buffer[i] = mem_map_base_mem[i];
-		*/
 		memcpy( (void *)mem_map_base_mem, (void *)tx_proxy_interface_p->buffer, test_size);
 		memcpy( (void *)rx_proxy_interface_p->buffer, (void *)mem_map_base_mem, test_size);
 
-		/*
-		unsigned char *buffer = (unsigned char *)malloc(0x400000);
-		FILE *fp = NULL;
-		if( (fp = fopen("weight_reorg_ap16.bin", "rb")) == NULL)
-			fprintf(stderr,"CANNOT OPEN bin_file\n");
-		int rd_num = fread(buffer, sizeof(unsigned char), 0x400000, fp);
-		fclose(fp);
-
-	   	fd = open("/dev/mem", O_RDWR|O_SYNC);
-    	   	if (fd == -1){
-        		perror("init_map open failed:");
-                	exit(1);
-           	}
-
-           	//physical mapping to virtual memory
-           	mem_map_base_mem = (uint8_t * )mmap(NULL, 4*1024*1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, MEM_BASE_ADDR);
-                                    
-    	   	if (mem_map_base_mem == NULL) {
-        		perror("init_map mmap failed:");
-        		close(fd);
-        		exit(1);
-    	    	}
-		gettimeofday( &start1, NULL );
-		memcpy( (void *)mem_map_base_mem, (void *)buffer, 4*1024*1024);
-		gettimeofday( &end1, NULL );
-    		time_diff = 1000000 * ( end1.tv_sec - start1.tv_sec ) + end1.tv_usec - start1.tv_usec;
-    		printf("memcpy time: %d us\n", time_diff);
-   		
-		munmap(mem_map_base_mem, 4*1024*1024);
-    		close(fd);
- 		*/
 	}
 
         /* Verify the data recieved matchs what was sent (tx is looped back to tx)
@@ -274,7 +236,6 @@ int main(int argc, char *argv[])
 			    if (rx_proxy_interface_p->buffer[i] != (unsigned char)(counter + i))
 				    printf("buffer not equal, index = %d, data = %d expected data = %d\n", i, 
 					rx_proxy_interface_p->buffer[i], (unsigned char)(counter + i));
-	            //printf("%dst test ok!\n",counter);
         }
     }
     gettimeofday( &end, NULL );
