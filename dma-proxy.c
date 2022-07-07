@@ -162,25 +162,25 @@ static void transfer(struct dma_proxy_channel *pchannel_p)
 	/* The physical address of the buffer in the interface is needed for the dma transfer
 	 * as the buffer may not be the first data in the interface
 	 */
-    printk("pchannel_p->interface_phys_addr: %#llx\n",pchannel_p->interface_phys_addr);
-	pchannel_p->dma_handle = (dma_addr_t)(pchannel_p->interface_phys_addr + 
+    pchannel_p->dma_handle = (dma_addr_t)(pchannel_p->interface_phys_addr + 
 					offsetof(struct dma_proxy_channel_interface, buffer));
+    
     while(pchannel_p->interface_p->length > max_transfer_size){
-        printk(KERN_INFO "%s %dst transfer: pl addr %#llx, ps physical addr %#llx, size %#x\n", dir[pchannel_p->direction], cnt, pl_addr, pchannel_p->dma_handle, max_transfer_size);
         start_transfer(pchannel_p,pl_addr,max_transfer_size);
 	    wait_for_transfer(pchannel_p);
-        //update PL DDR buffer start addr and ARM DDR buffer start addr
+        
+	//update PL DDR buffer start addr and ARM DDR buffer start addr
         pl_addr  += max_transfer_size;
         pchannel_p->dma_handle += max_transfer_size;
-        //update the left bytes to transfer
+        
+	//update the left bytes to transfer
         pchannel_p->interface_p->length -= max_transfer_size;
         ++cnt;
     }
     if(pchannel_p->interface_p->length > 0){
-        printk(KERN_INFO "%s %dst transfer: pl addr %#llx, ps physical addr %#llx, size %#x\n\n", dir[pchannel_p->direction], cnt, pl_addr, pchannel_p->dma_handle, pchannel_p->interface_p->length);   
         //one possible is left to transfer is less than max_transfer_size, one possible is the origin to transfer is less than max_transfer_size
         start_transfer(pchannel_p, pl_addr, pchannel_p->interface_p->length);
-	    wait_for_transfer(pchannel_p);
+	wait_for_transfer(pchannel_p);
     }
 
 }
